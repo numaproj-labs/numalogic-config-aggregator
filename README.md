@@ -121,7 +121,7 @@ data:
         "service": {
           "type": "string"
         },
-        "metrics_configs": {
+        "metric_configs": {
           "type": "array",
           "items": {
             "type": "object"
@@ -136,7 +136,7 @@ data:
       },
       "required": [
         "service",
-        "metrics_configs",
+        "metric_configs",
         "unified_configs"
       ]
     }

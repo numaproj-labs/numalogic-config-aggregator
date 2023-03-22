@@ -79,14 +79,13 @@ apiVersion: v1
 data:
   schema.json: |
     {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "Numalogic application configuration",
       "type": "object",
       "properties": {
         "service": {
           "type": "string"
         },
-        "metrics_configs": {
+        "metric_configs": {
           "type": "array",
           "items": {
             "type": "object"
@@ -101,7 +100,7 @@ data:
       },
       "required": [
         "service",
-        "metrics_configs",
+        "metric_configs",
         "unified_configs"
       ]
     }

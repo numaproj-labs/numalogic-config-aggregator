@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	applicationConfigStr = `metrics_configs:
+	applicationConfigStr = `metric_configs:
 - composite_keys:
   - ck11
   - ck12
@@ -35,8 +35,8 @@ unified_configs:
 func fakeApplicationConfig(t *testing.T) ApplicationConfig {
 	t.Helper()
 	return ApplicationConfig{
-		Service: "test",
-		MetricsConfigs: []obj{
+		"service": "test",
+		"metric_configs": []obj{
 			{
 				"metric":           "m1",
 				"composite_keys":   []string{"ck11", "ck12"},
@@ -48,7 +48,7 @@ func fakeApplicationConfig(t *testing.T) ApplicationConfig {
 				"static_threshold": 2,
 			},
 		},
-		UnifiedConfigs: []obj{
+		"unified_configs": []obj{
 			{
 				"unified_metric_name": "umn1",
 				"unified_metrics":     []string{"um11", "um12"},
@@ -91,8 +91,12 @@ func Test_GlobalConfig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(g1.Configs))
 	assert.Equal(t, "ns1", g1.Configs[0].Namespace)
-	assert.Equal(t, 2, len(g1.Configs[0].MetricsConfigs))
-	s, ok := g1.Configs[0].MetricsConfigs[0]["composite_keys"].([]interface{})
+	mc, ok := g1.Configs[0].ApplicationConfig["metric_configs"].([]interface{})
 	assert.True(t, ok)
-	assert.Equal(t, 2, len(s))
+	assert.Equal(t, 2, len(mc))
+	ck, ok := mc[0].(obj)
+	assert.True(t, ok)
+	l, ok := ck["composite_keys"].([]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, 2, len(l))
 }
