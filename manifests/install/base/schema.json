@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Numalogic application configuration",
+  "type": "object",
+  "properties": {
+    "service": {
+      "type": "string"
+    },
+    "metrics_configs": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "unified_configs": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "required": [
+    "service",
+    "metrics_configs",
+    "unified_configs"
+  ]
+}
+

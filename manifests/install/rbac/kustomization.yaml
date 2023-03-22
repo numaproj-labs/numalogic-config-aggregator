@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- aggregator-role.yaml
+- aggregator-role-binding.yaml
+- aggregator-cluster-role.yaml
+- aggregator-cluster-role-binding.yaml

@@ -1,0 +1,164 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: config-aggregator-sa
+  namespace: numalogic-argorollouts
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: config-aggregator-role
+  namespace: numalogic-argorollouts
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - update
+  - delete
+  - patch
+  - get
+  - list
+  - watch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: numalogic-config-aggregator-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: config-aggregator-role-binding
+  namespace: numalogic-argorollouts
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: config-aggregator-role
+subjects:
+- kind: ServiceAccount
+  name: config-aggregator-sa
+  namespace: numalogic-argorollouts
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: aggregator-cluster-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: numalogic-config-aggregator-role
+subjects:
+- kind: ServiceAccount
+  name: config-aggregator-sa
+  namespace: numalogic-argorollouts
+---
+apiVersion: v1
+data:
+  schema.json: |+
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Numalogic application configuration",
+      "type": "object",
+      "properties": {
+        "service": {
+          "type": "string"
+        },
+        "metrics_configs": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "unified_configs": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "service",
+        "metrics_configs",
+        "unified_configs"
+      ]
+    }
+
+kind: ConfigMap
+metadata:
+  name: application-config-schema
+  namespace: numalogic-argorollouts
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: numalogic-config-aggregator
+  name: numalogic-config-aggregator
+  namespace: numalogic-argorollouts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: numalogic-config-aggregator
+  template:
+    metadata:
+      labels:
+        app: numalogic-config-aggregator
+    spec:
+      containers:
+      - args:
+        - --configmap-name=numalogic-argorollouts
+        - --configmap-key=config.yaml
+        - --app-config-label=numaprom.numaproj.io/component=argo-rollouts
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: quay.io/numaio/numalogic-config-aggregator:latest
+        name: aggregator
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1024Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - mountPath: /etc/config/config-aggregator
+          name: application-config-schema
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 7019
+      serviceAccountName: config-aggregator-sa
+      volumes:
+      - configMap:
+          name: application-config-schema
+        name: application-config-schema

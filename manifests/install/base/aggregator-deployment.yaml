@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: numalogic-config-aggregator
+  name: numalogic-config-aggregator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: numalogic-config-aggregator
+  template:
+    metadata:
+      labels:
+        app: numalogic-config-aggregator
+    spec:
+      serviceAccountName: config-aggregator-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 7019
+      containers:
+      - image: quay.io/numaio/numalogic-config-aggregator:latest
+        name: aggregator
+        volumeMounts:
+        - name: application-config-schema
+          mountPath: "/etc/config/config-aggregator"
+        args:
+        - --configmap-name=numalogic-argorollouts
+        - --configmap-key=config.yaml
+        - --app-config-label=numaprom.numaproj.io/component=argo-rollouts
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1024Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+      volumes:
+      - name: application-config-schema
+        configMap:
+          name: application-config-schema
