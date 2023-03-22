@@ -2,13 +2,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: config-aggregator-sa
-  namespace: numalogic-argorollouts
+  namespace: numalogic-rollouts
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: config-aggregator-role
-  namespace: numalogic-argorollouts
+  namespace: numalogic-rollouts
 rules:
 - apiGroups:
   - ""
@@ -52,7 +52,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: config-aggregator-role-binding
-  namespace: numalogic-argorollouts
+  namespace: numalogic-rollouts
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -60,7 +60,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: config-aggregator-sa
-  namespace: numalogic-argorollouts
+  namespace: numalogic-rollouts
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -73,7 +73,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: config-aggregator-sa
-  namespace: numalogic-argorollouts
+  namespace: numalogic-rollouts
 ---
 apiVersion: v1
 data:
@@ -300,7 +300,7 @@ data:
 kind: ConfigMap
 metadata:
   name: application-config-schema
-  namespace: numalogic-argorollouts
+  namespace: numalogic-rollouts
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -308,7 +308,7 @@ metadata:
   labels:
     app: numalogic-config-aggregator
   name: numalogic-config-aggregator
-  namespace: numalogic-argorollouts
+  namespace: numalogic-rollouts
 spec:
   replicas: 1
   selector:

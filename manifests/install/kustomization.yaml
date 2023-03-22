@@ -9,4 +9,4 @@ images:
   - name: quay.io/numaio/numalogic-config-aggregator
     newTag: latest
 
-namespace: numalogic-argorollouts
+namespace: numalogic-rollouts
