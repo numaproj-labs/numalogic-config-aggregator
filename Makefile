@@ -5,7 +5,7 @@ BINARY_NAME:=numalogic-config-aggregator
 
 # docker image publishing options
 DOCKER_PUSH?=false
-IMAGE_NAMESPACE?=quay.io/numaio/numalogic-config-aggregator
+IMAGE_NAMESPACE?=quay.io/numaio
 IMAGE_TAG?=latest
 
 DOCKERFILE:=Dockerfile
