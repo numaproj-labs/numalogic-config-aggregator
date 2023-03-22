@@ -41,7 +41,7 @@ func Test_runOnce(t *testing.T) {
 	k8sCli := k8sfake.NewSimpleClientset()
 	_, _ = k8sCli.CoreV1().ConfigMaps("ns1").Create(context.Background(), cm1, metav1.CreateOptions{})
 	_, _ = k8sCli.CoreV1().ConfigMaps("ns2").Create(context.Background(), cm2, metav1.CreateOptions{})
-	a := NewAggregator(k8sCli, namespace, cm, WithSchemaFilePath("../../manifests/install/base/schema.json"))
+	a := NewAggregator(k8sCli, namespace, cm, WithSchemaFileDir("../../manifests/install/base"))
 	err := a.runOnce(context.Background())
 	assert.NoError(t, err)
 	configMap, err := k8sCli.CoreV1().ConfigMaps(namespace).Get(context.Background(), cm, metav1.GetOptions{})

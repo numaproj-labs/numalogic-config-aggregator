@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -20,14 +22,14 @@ var defaultSettings struct {
 	interval          time.Duration
 	configMapKey      string
 	appConfigMapLabel string
-	schemaFilePath    string
+	schemaFileDir     string
 }
 
 func init() {
 	defaultSettings.interval = time.Second * 180
 	defaultSettings.configMapKey = "config.yaml"
 	defaultSettings.appConfigMapLabel = "numaprom.numaproj.io/component=argo-rollouts"
-	defaultSettings.schemaFilePath = "/etc/config/config-aggregator/schema.json"
+	defaultSettings.schemaFileDir = "/etc/config/config-aggregator"
 }
 
 type aggregator struct {
@@ -40,8 +42,8 @@ type aggregator struct {
 	configMapKey string
 	// The label of the config in application namespace
 	appConfigLabel string
-	// The path of the json-schema file for validation
-	schemaFilePath string
+	// The dir of the schema.json file for validation
+	schemaFileDir string
 	// Interval of each run
 	interval time.Duration
 	logger   *zap.SugaredLogger
@@ -58,7 +60,7 @@ func NewAggregator(k8sclient kubernetes.Interface, namespace, configMap string, 
 		configMapKey:   defaultSettings.configMapKey,
 		interval:       defaultSettings.interval,
 		appConfigLabel: defaultSettings.appConfigMapLabel,
-		schemaFilePath: defaultSettings.schemaFilePath,
+		schemaFileDir:  defaultSettings.schemaFileDir,
 	}
 	for _, opt := range opts {
 		if opt != nil {
@@ -68,9 +70,21 @@ func NewAggregator(k8sclient kubernetes.Interface, namespace, configMap string, 
 	if a.logger == nil {
 		a.logger = logging.NewLogger()
 	}
-	// TODO: auto reload
-	a.schemaLoader = gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", a.schemaFilePath))
+	a.loadConfig()
 	return a
+}
+
+func (a *aggregator) loadConfig() {
+	v := viper.New()
+	v.SetConfigName("schema")
+	v.SetConfigType("json")
+	v.AddConfigPath(a.schemaFileDir)
+	v.WatchConfig()
+	f := fmt.Sprintf("file://%s/schema.json", a.schemaFileDir)
+	v.OnConfigChange(func(e fsnotify.Event) {
+		a.schemaLoader = gojsonschema.NewReferenceLoader(f)
+	})
+	a.schemaLoader = gojsonschema.NewReferenceLoader(f)
 }
 
 // Run starts an infinite for loop to aggregate the config from applications namespaces,

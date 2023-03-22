@@ -36,9 +36,9 @@ func WithConfigMapKey(k string) Option {
 	}
 }
 
-// WithSchemaFilePath sets the path of the json-schema file for validation.
-func WithSchemaFilePath(p string) Option {
+// WithSchemaFileDir sets the dir of the json-schema file for validation.
+func WithSchemaFileDir(p string) Option {
 	return func(o *aggregator) {
-		o.schemaFilePath = p
+		o.schemaFileDir = p
 	}
 }

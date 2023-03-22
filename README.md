@@ -81,6 +81,10 @@ The configuration aggregator is deployed in the Numalogic inference pipeline nam
 
 The deployment manifests are defined in [manifests/install](manifests/install), after making changes to the manifests, remember to run `make manifests` to make sure there's no error and regenerate [install.yaml](manifests/install.yaml).
 
+### High Availability
+
+`Active-Passive` HA is available for the deployment by default, which means multiple replica is supported.
+
 ### Configuration
 
 The deployment spec accepts following arguments.
@@ -100,8 +104,6 @@ The deployment spec accepts following arguments.
 - `interval`
 
   (Optional) The interval of the periodical job, accepts format like `30s`, `2m10s`, defaults to `180s`.
-
-`Active-Passive` HA is available for the deployment by default, which means multiple replica for hight availablity is supported.
 
 ## Application Configuration Validation
 
