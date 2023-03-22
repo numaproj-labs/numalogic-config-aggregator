@@ -5,6 +5,7 @@ on:
     tags:
       - 'v*'
     branches:
+      - main
       - dev-release*
 
 defaults:
