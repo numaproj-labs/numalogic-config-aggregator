@@ -1,26 +1,219 @@
 {
-  "title": "Numalogic application configuration",
+  "title": "ServiceConf",
+  "description": "ServiceConf(*, service: str = 'default', namespace: str = 'default', metric_configs: List[__main__.MetricConf] = None, unified_configs: List[__main__.UnifiedConf] = None)",
   "type": "object",
   "properties": {
     "service": {
+      "title": "Service",
+      "default": "default",
+      "type": "string"
+    },
+    "namespace": {
+      "title": "Namespace",
+      "default": "default",
       "type": "string"
     },
     "metric_configs": {
+      "title": "Metric Configs",
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "#/definitions/MetricConf"
       }
     },
     "unified_configs": {
+      "title": "Unified Configs",
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "#/definitions/UnifiedConf"
       }
     }
   },
-  "required": [
-    "service",
-    "metric_configs",
-    "unified_configs"
-  ]
+  "definitions": {
+    "ModelInfo": {
+      "title": "ModelInfo",
+      "description": "Schema for defining the model/estimator.\n\nArgs:\n    name: name of the model; this should map to a supported list of models\n          mentioned in the factory file\n    conf: kwargs for instantiating the model class\n    stateful: flag indicating if the model is stateful or not",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "default": "???",
+          "type": "string"
+        },
+        "conf": {
+          "title": "Conf",
+          "type": "object"
+        },
+        "stateful": {
+          "title": "Stateful",
+          "default": true,
+          "type": "boolean"
+        }
+      }
+    },
+    "LightningTrainerConf": {
+      "title": "LightningTrainerConf",
+      "description": "Schema for defining the Pytorch Lightning trainer behavior.\n\nMore details on the arguments are provided here:\nhttps://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html#trainer-class-api",
+      "type": "object",
+      "properties": {
+        "max_epochs": {
+          "title": "Max Epochs",
+          "default": 100,
+          "type": "integer"
+        },
+        "logger": {
+          "title": "Logger",
+          "default": false,
+          "type": "boolean"
+        },
+        "check_val_every_n_epoch": {
+          "title": "Check Val Every N Epoch",
+          "default": 5,
+          "type": "integer"
+        },
+        "log_every_n_steps": {
+          "title": "Log Every N Steps",
+          "default": 20,
+          "type": "integer"
+        },
+        "enable_checkpointing": {
+          "title": "Enable Checkpointing",
+          "default": false,
+          "type": "boolean"
+        },
+        "enable_progress_bar": {
+          "title": "Enable Progress Bar",
+          "default": true,
+          "type": "boolean"
+        },
+        "enable_model_summary": {
+          "title": "Enable Model Summary",
+          "default": true,
+          "type": "boolean"
+        },
+        "limit_val_batches": {
+          "title": "Limit Val Batches",
+          "default": 0,
+          "type": "boolean"
+        },
+        "callbacks": {
+          "title": "Callbacks"
+        }
+      }
+    },
+    "RegistryConf": {
+      "title": "RegistryConf",
+      "description": "Registry config base class",
+      "type": "object",
+      "properties": {}
+    },
+    "NumalogicConf": {
+      "title": "NumalogicConf",
+      "description": "Top level config schema for numalogic.",
+      "type": "object",
+      "properties": {
+        "model": {
+          "$ref": "#/definitions/ModelInfo"
+        },
+        "trainer": {
+          "$ref": "#/definitions/LightningTrainerConf"
+        },
+        "registry": {
+          "$ref": "#/definitions/RegistryConf"
+        },
+        "preprocess": {
+          "title": "Preprocess",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ModelInfo"
+          }
+        },
+        "threshold": {
+          "$ref": "#/definitions/ModelInfo"
+        },
+        "postprocess": {
+          "$ref": "#/definitions/ModelInfo"
+        }
+      }
+    },
+    "MetricConf": {
+      "title": "MetricConf",
+      "description": "MetricConf(*, metric: str = 'default', composite_keys: List[str] = None, static_threshold: int = 3, static_threshold_wt: float = 0.0, scrape_interval: int = 30, retrain_freq_hr: int = 8, resume_training: bool = False, numalogic_conf: __main__.NumalogicConf = '???')",
+      "type": "object",
+      "properties": {
+        "metric": {
+          "title": "Metric",
+          "default": "default",
+          "type": "string"
+        },
+        "composite_keys": {
+          "title": "Composite Keys",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "static_threshold": {
+          "title": "Static Threshold",
+          "default": 3,
+          "type": "integer"
+        },
+        "static_threshold_wt": {
+          "title": "Static Threshold Wt",
+          "default": 0.0,
+          "type": "number"
+        },
+        "scrape_interval": {
+          "title": "Scrape Interval",
+          "default": 30,
+          "type": "integer"
+        },
+        "retrain_freq_hr": {
+          "title": "Retrain Freq Hr",
+          "default": 8,
+          "type": "integer"
+        },
+        "resume_training": {
+          "title": "Resume Training",
+          "default": false,
+          "type": "boolean"
+        },
+        "numalogic_conf": {
+          "title": "Numalogic Conf",
+          "default": "???",
+          "allOf": [
+            {
+              "$ref": "#/definitions/NumalogicConf"
+            }
+          ]
+        }
+      }
+    },
+    "UnifiedConf": {
+      "title": "UnifiedConf",
+      "description": "UnifiedConf(*, unified_metric_name: str, unified_metrics: List[str], unified_strategy: str = 'max')",
+      "type": "object",
+      "properties": {
+        "unified_metric_name": {
+          "title": "Unified Metric Name",
+          "type": "string"
+        },
+        "unified_metrics": {
+          "title": "Unified Metrics",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unified_strategy": {
+          "title": "Unified Strategy",
+          "default": "max",
+          "type": "string"
+        }
+      },
+      "required": [
+        "unified_metric_name",
+        "unified_metrics"
+      ]
+    }
+  }
 }

@@ -112,9 +112,8 @@ The application configuration is supposed to be in YAML format, a `schema.json` 
 ```yaml
 apiVersion: v1
 data:
-  schema.json: |+
+  schema.json: |
     {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "Numalogic application configuration",
       "type": "object",
       "properties": {
@@ -140,7 +139,6 @@ data:
         "unified_configs"
       ]
     }
-
 kind: ConfigMap
 metadata:
   name: application-config-schema

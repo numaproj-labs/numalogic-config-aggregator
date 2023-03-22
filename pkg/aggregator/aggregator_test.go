@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -17,7 +18,9 @@ func Test_NewAggregator(t *testing.T) {
 	k8sCli := k8sfake.NewSimpleClientset()
 
 	t.Run("default", func(t *testing.T) {
-		a := NewAggregator(k8sCli, "ns", "cm", WithSchemaFileDir("../../manifests/install/base"))
+		path, err := os.Getwd()
+		assert.NoError(t, err)
+		a := NewAggregator(k8sCli, "ns", "cm", WithSchemaFileDir(path+"/../../manifests/install/base"))
 		assert.NotNil(t, a)
 		assert.Equal(t, defaultSettings.interval, a.interval)
 		assert.Equal(t, defaultSettings.configMapKey, a.configMapKey)
@@ -25,7 +28,9 @@ func Test_NewAggregator(t *testing.T) {
 	})
 
 	t.Run("customized", func(t *testing.T) {
-		a := NewAggregator(k8sCli, "ns", "cm", WithInterval(time.Second*100), WithAppConfigLabel("a=b"), WithConfigMapKey("a.yaml"), WithSchemaFileDir("../../manifests/install/base"))
+		path, err := os.Getwd()
+		assert.NoError(t, err)
+		a := NewAggregator(k8sCli, "ns", "cm", WithInterval(time.Second*100), WithAppConfigLabel("a=b"), WithConfigMapKey("a.yaml"), WithSchemaFileDir(path+"/../../manifests/install/base"))
 		assert.NotNil(t, a)
 		assert.Equal(t, time.Second*100, a.interval)
 		assert.Equal(t, "a.yaml", a.configMapKey)
@@ -41,8 +46,10 @@ func Test_runOnce(t *testing.T) {
 	k8sCli := k8sfake.NewSimpleClientset()
 	_, _ = k8sCli.CoreV1().ConfigMaps("ns1").Create(context.Background(), cm1, metav1.CreateOptions{})
 	_, _ = k8sCli.CoreV1().ConfigMaps("ns2").Create(context.Background(), cm2, metav1.CreateOptions{})
-	a := NewAggregator(k8sCli, namespace, cm, WithSchemaFileDir("../../manifests/install/base"))
-	err := a.runOnce(context.Background())
+	path, err := os.Getwd()
+	assert.NoError(t, err)
+	a := NewAggregator(k8sCli, namespace, cm, WithSchemaFileDir(path+"/../../manifests/install/base"))
+	err = a.runOnce(context.Background())
 	assert.NoError(t, err)
 	configMap, err := k8sCli.CoreV1().ConfigMaps(namespace).Get(context.Background(), cm, metav1.GetOptions{})
 	assert.NoError(t, err)
