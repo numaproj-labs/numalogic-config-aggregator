@@ -10,14 +10,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 )
 
-type Elector interface {
-	RunOrDie(context.Context, LeaderCallbacks)
-}
-type LeaderCallbacks struct {
-	OnStartedLeading func(context.Context)
-	OnStoppedLeading func()
-}
-
+// A k8s based leader election implementation
 type k8selector struct {
 	k8sclient  kubernetes.Interface
 	namespace  string

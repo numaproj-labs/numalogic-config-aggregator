@@ -171,6 +171,7 @@ func (a *aggregator) runOnce(ctx context.Context) error {
 	return nil
 }
 
+// Validate the user configured YAML string, and convert to an object
 func (a *aggregator) convert(config string) (obj, error) {
 	// Validation
 	jsonBytes, err := yaml.YAMLToJSON([]byte(config))
