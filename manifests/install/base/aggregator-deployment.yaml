@@ -25,7 +25,7 @@ spec:
         - name: application-config-schema
           mountPath: "/etc/config/config-aggregator"
         args:
-        - --configmap-name=numalogic-argorollouts
+        - --configmap-name=numaproj-argorollouts-configs
         - --configmap-key=config.yaml
         - --app-config-label=numaprom.numaproj.io/component=argo-rollouts
         resources:

@@ -128,7 +128,7 @@ spec:
     spec:
       containers:
       - args:
-        - --configmap-name=numalogic-argorollouts
+        - --configmap-name=numaproj-argorollouts-configs
         - --configmap-key=config.yaml
         - --app-config-label=numaprom.numaproj.io/component=argo-rollouts
         env:
