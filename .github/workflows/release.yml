@@ -1,0 +1,51 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - dev-release*
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-binaries:
+    runs-on: ubuntu-20.04
+    if: github.repository == 'numaproj-labs/numalogic-config-aggregator'
+    name: Build binaries
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3.1.0
+        with:
+          go-version: 1.19
+
+      - name: Build binaries
+        run: |
+          make build
+          chmod -R +x dist
+
+      - name: Registry Login
+        uses: docker/login-action@v2
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAYIO_USERNAME }}
+          password: ${{ secrets.QUAYIO_PASSWORD }}
+
+      - name: Set Version
+        id: version
+        run: |
+          tag=$(basename $GITHUB_REF)
+          if [ $tag = "main" ]; then
+            tag="latest"
+          fi
+          echo "VERSION=$tag" >> $GITHUB_OUTPUT
+
+      - name: Build image
+        run: |
+          IMAGE_NAMESPACE=${{ secrets.QUAYIO_ORG }} VERSION=${{ steps.version.outputs.VERSION }} DOCKER_PUSH=true make image
