@@ -17,7 +17,7 @@ func Test_NewAggregator(t *testing.T) {
 	k8sCli := k8sfake.NewSimpleClientset()
 
 	t.Run("default", func(t *testing.T) {
-		a := NewAggregator(k8sCli, "ns", "cm")
+		a := NewAggregator(k8sCli, "ns", "cm", WithSchemaFileDir("../../manifests/install/base"))
 		assert.NotNil(t, a)
 		assert.Equal(t, defaultSettings.interval, a.interval)
 		assert.Equal(t, defaultSettings.configMapKey, a.configMapKey)
@@ -25,7 +25,7 @@ func Test_NewAggregator(t *testing.T) {
 	})
 
 	t.Run("customized", func(t *testing.T) {
-		a := NewAggregator(k8sCli, "ns", "cm", WithInterval(time.Second*100), WithAppConfigLabel("a=b"), WithConfigMapKey("a.yaml"))
+		a := NewAggregator(k8sCli, "ns", "cm", WithInterval(time.Second*100), WithAppConfigLabel("a=b"), WithConfigMapKey("a.yaml"), WithSchemaFileDir("../../manifests/install/base"))
 		assert.NotNil(t, a)
 		assert.Equal(t, time.Second*100, a.interval)
 		assert.Equal(t, "a.yaml", a.configMapKey)

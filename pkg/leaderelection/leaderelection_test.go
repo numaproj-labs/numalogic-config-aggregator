@@ -3,6 +3,7 @@ package leaderelection
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 )
 
 func Test_RunOrDie(t *testing.T) {
-	// FIXME: DATA RACE
 	k8sCli := k8sfake.NewSimpleClientset()
 	elector1 := NewK8sLeaderElector(k8sCli, "test-ns", "my-lock", "e1", WithLeaseDuration(10*time.Second), WithRenewDeadline(5*time.Second))
 	elector2 := NewK8sLeaderElector(k8sCli, "test-ns", "my-lock", "e2", WithLeaseDuration(10*time.Second), WithRenewDeadline(5*time.Second))
@@ -21,50 +21,69 @@ func Test_RunOrDie(t *testing.T) {
 
 	defer cancel1()
 	defer cancel2()
-	run1, run2 := false, false
-	stop1, stop2 := false, false
+	flags := map[string]bool{"run1": false, "run2": false, "stop1": false, "stop2": false, "end1": false, "end2": false}
+	var lock sync.RWMutex
+	setFlag := func(flag string, f bool) {
+		lock.Lock()
+		defer lock.Unlock()
+		flags[flag] = f
+	}
 
-	end1, end2 := false, false
+	readFlag := func(flag string) bool {
+		lock.RLock()
+		defer lock.RUnlock()
+		return flags[flag]
+	}
 
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		elector1.RunOrDie(ctx1, LeaderCallbacks{
 			OnStartedLeading: func(_ context.Context) {
 				fmt.Println("start 101")
-				run1 = true
+				setFlag("run1", true)
 			},
 			OnStoppedLeading: func() {
 				fmt.Println("stop 101")
-				stop1 = true
+				setFlag("stop1", true)
 			},
 		})
-		end1 = true
+		setFlag("end1", true)
 	}()
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		elector2.RunOrDie(ctx2, LeaderCallbacks{
 			OnStartedLeading: func(_ context.Context) {
 				fmt.Println("start 201")
-				run2 = true
+				setFlag("run2", true)
 			},
 			OnStoppedLeading: func() {
 				fmt.Println("stop 201")
-				stop2 = true
+				setFlag("stop2", true)
 			},
 		})
-		end2 = true
+		setFlag("end2", true)
 	}()
+
 	time.Sleep(3 * time.Second)
-	assert.True(t, run1 || run2)
-	assert.False(t, run1 && run2)
-	if run1 {
+	assert.True(t, readFlag("run1") || readFlag("run2"))
+	assert.False(t, readFlag("run1") && readFlag("run2"))
+	if readFlag("run1") {
 		cancel1()
 	}
-	if run2 {
+	if readFlag("run2") {
 		cancel2()
 	}
 	time.Sleep(3 * time.Second)
-	assert.True(t, stop1 || stop2)
-	assert.False(t, stop1 && stop2)
-	assert.True(t, end1 || end2)
-	assert.False(t, end1 && end2)
+	assert.True(t, readFlag("stop1") || readFlag("stop2"))
+	assert.False(t, readFlag("stop1") && readFlag("stop2"))
+	assert.True(t, readFlag("end1") || readFlag("end2"))
+	assert.False(t, readFlag("end1") && readFlag("end2"))
+	cancel1()
+	cancel2()
+	wg.Wait()
+	assert.True(t, readFlag("end1") && readFlag("end2"))
 }
