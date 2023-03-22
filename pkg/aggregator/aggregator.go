@@ -74,6 +74,7 @@ func NewAggregator(k8sclient kubernetes.Interface, namespace, configMap string, 
 	return a
 }
 
+// Auto reload schema.json
 func (a *aggregator) loadConfig() {
 	v := viper.New()
 	v.SetConfigName("schema")
@@ -111,7 +112,9 @@ func (a *aggregator) runOnce(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to list configmaps, %w", err)
 	}
-	config := GlobalConfig{}
+	config := GlobalConfig{
+		Configs: []obj{},
+	}
 	for _, cm := range cmList.Items {
 		for key, data := range cm.Data { // Iterate all the key/value pairs in the configmap
 			// TODO: merge multiple entries in one ConfigMap.
