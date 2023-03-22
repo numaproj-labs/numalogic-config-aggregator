@@ -134,7 +134,6 @@ data:
         }
       },
       "required": [
-        "service",
         "metric_configs",
         "unified_configs"
       ]
