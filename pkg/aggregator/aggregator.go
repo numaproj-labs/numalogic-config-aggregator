@@ -121,13 +121,12 @@ func (a *aggregator) runOnce(ctx context.Context) error {
 				a.logger.Errorw("Invalid application config", zap.String("namespace", cm.Namespace), zap.String("configmap", cm.Name), zap.String("configmapKey", key), zap.Error(err))
 				continue
 			}
-			config.Configs = append(config.Configs, struct {
-				Namespace string `json:"namespace"`
-				ApplicationConfig
-			}{
-				Namespace:         cm.Namespace,
-				ApplicationConfig: *appConfig,
-			})
+			if len(appConfig) == 0 {
+				a.logger.Warnw("Empty application config", zap.String("namespace", cm.Namespace), zap.String("configmap", cm.Name), zap.String("configmapKey", key))
+				continue
+			}
+			appConfig[Namespace] = cm.Namespace
+			config.Configs = append(config.Configs, appConfig)
 		}
 	}
 	configBytes, err := yaml.Marshal(&config)
@@ -169,7 +168,7 @@ func (a *aggregator) runOnce(ctx context.Context) error {
 	return nil
 }
 
-func (a *aggregator) convert(config string) (*ApplicationConfig, error) {
+func (a *aggregator) convert(config string) (obj, error) {
 	// Validation
 	jsonBytes, err := yaml.YAMLToJSON([]byte(config))
 	if err != nil {
@@ -183,9 +182,9 @@ func (a *aggregator) convert(config string) (*ApplicationConfig, error) {
 	if !result.Valid() {
 		return nil, fmt.Errorf("invalid application config, %v", result.Errors())
 	}
-	var appConfig ApplicationConfig
+	var appConfig obj
 	if err := yaml.Unmarshal([]byte(config), &appConfig); err != nil {
 		return nil, fmt.Errorf("failed to marshal application config, %w", err)
 	}
-	return &appConfig, nil
+	return appConfig, nil
 }

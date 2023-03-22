@@ -32,9 +32,9 @@ unified_configs:
 `
 )
 
-func fakeApplicationConfig(t *testing.T) ApplicationConfig {
+func fakeApplicationConfig(t *testing.T) obj {
 	t.Helper()
-	return ApplicationConfig{
+	return obj{
 		"service": "test",
 		"metric_configs": []obj{
 			{
@@ -62,14 +62,9 @@ func fakeApplicationConfig(t *testing.T) ApplicationConfig {
 }
 
 func fakeGlobalConfig(t *testing.T) GlobalConfig {
-	return GlobalConfig{
-		Configs: []struct {
-			Namespace string `json:"namespace"`
-			ApplicationConfig
-		}{
-			{Namespace: "ns1", ApplicationConfig: fakeApplicationConfig(t)},
-		},
-	}
+	o := fakeApplicationConfig(t)
+	o[Namespace] = "ns1"
+	return GlobalConfig{Configs: []obj{o}}
 }
 
 func Test_ApplicationConfig(t *testing.T) {
@@ -77,7 +72,7 @@ func Test_ApplicationConfig(t *testing.T) {
 	yamlBytes, err := yaml.Marshal(&fakeAppConfig)
 	assert.NoError(t, err)
 	assert.Equal(t, applicationConfigStr, string(yamlBytes))
-	a1 := ApplicationConfig{}
+	a1 := obj{}
 	err = yaml.Unmarshal(yamlBytes, &a1)
 	assert.NoError(t, err)
 }
@@ -90,8 +85,8 @@ func Test_GlobalConfig(t *testing.T) {
 	err = yaml.Unmarshal(yamlBytes, &g1)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(g1.Configs))
-	assert.Equal(t, "ns1", g1.Configs[0].Namespace)
-	mc, ok := g1.Configs[0].ApplicationConfig["metric_configs"].([]interface{})
+	assert.Equal(t, "ns1", g1.Configs[0]["namespace"])
+	mc, ok := g1.Configs[0]["metric_configs"].([]interface{})
 	assert.True(t, ok)
 	assert.Equal(t, 2, len(mc))
 	ck, ok := mc[0].(obj)
